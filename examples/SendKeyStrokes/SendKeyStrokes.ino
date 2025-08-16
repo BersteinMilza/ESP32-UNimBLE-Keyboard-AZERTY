@@ -9,6 +9,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
   bleKeyboard.onConnect([](){ Serial.println("onConnect"); });
+  bleKeyboard.onDisconnect([](){ Serial.println("onDisconnect"); });
   bleKeyboard.begin();
 }
 
