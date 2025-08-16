@@ -1,14 +1,9 @@
-#include <NimBLEDevice.h>
-#include <NimBLEUtils.h>
-#include <NimBLEServer.h>
-#include "NimBLEHIDDevice.h"
-#include "HIDTypes.h"
-#include <driver/adc.h>
-#include "sdkconfig.h"
-
-#include "BleConnectionStatus.h"
-#include "KeyboardOutputCallbacks.h"
 #include "BleKeyboard.h"
+
+#include <NimBLEDevice.h>
+#include "HIDTypes.h"
+
+#include "sdkconfig.h"
 
 #if defined(CONFIG_ARDUHAL_ESP_LOG)
   #include "esp32-hal-log.h"
@@ -93,66 +88,47 @@ BleKeyboard::BleKeyboard(std::string deviceName, std::string deviceManufacturer,
   this->deviceName = deviceName;
   this->deviceManufacturer = deviceManufacturer;
   this->batteryLevel = batteryLevel;
-  this->connectionStatus = new BleConnectionStatus();
 }
 
 void BleKeyboard::begin(void)
 {
-  xTaskCreate(this->taskServer, "server", 20000, (void *)this, 5, NULL);
+  NimBLEDevice::init(deviceName);
+  BLEDevice::setSecurityAuth(true, true, false);
+
+  NimBLEServer *pServer = NimBLEDevice::createServer();
+  pServer->setCallbacks(this);
+
+  hid        = new NimBLEHIDDevice(pServer);
+  inputKeyboard = hid->getInputReport(KEYBOARD_ID); // <-- input REPORTID from report map
+  outputKeyboard = hid->getOutputReport(KEYBOARD_ID);
+  inputMediaKeys = hid->getInputReport(MEDIA_KEYS_ID);
+  outputKeyboard->setCallbacks(this);
+  
+  hid->setManufacturer(deviceManufacturer);
+  hid->setPnp(0x02, 0xe502, 0xa111, 0x0210);
+  hid->setHidInfo(0x00, 0x01);
+  hid->setReportMap((uint8_t*)_hidReportDescriptor, sizeof(_hidReportDescriptor));
+  hid->startServices();
+
+  NimBLEAdvertising *pAdvertising = pServer->getAdvertising();
+  pAdvertising->setAppearance(HID_KEYBOARD);
+  pAdvertising->addServiceUUID(hid->getHidService()->getUUID());
+  pAdvertising->start();
+  hid->setBatteryLevel(batteryLevel);
 }
 
 void BleKeyboard::end(void)
 {
 }
 
-bool BleKeyboard::isConnected(void) {
-  return this->connectionStatus->connected;
+bool BleKeyboard::isConnected(void) const {
+  return connected;
 }
 
 void BleKeyboard::setBatteryLevel(uint8_t level) {
   this->batteryLevel = level;
   if (hid != 0)
     this->hid->setBatteryLevel(this->batteryLevel);
-}
-
-void BleKeyboard::taskServer(void* pvParameter) {
-  BleKeyboard* bleKeyboardInstance = (BleKeyboard *) pvParameter; //static_cast<BleKeyboard *>(pvParameter);
-  NimBLEDevice::init(bleKeyboardInstance->deviceName);
-  NimBLEServer *pServer = NimBLEDevice::createServer();
-  pServer->setCallbacks(bleKeyboardInstance->connectionStatus);
-
-  bleKeyboardInstance->hid = new NimBLEHIDDevice(pServer);
-  bleKeyboardInstance->inputKeyboard = bleKeyboardInstance->hid->inputReport(KEYBOARD_ID); // <-- input REPORTID from report map
-  bleKeyboardInstance->outputKeyboard = bleKeyboardInstance->hid->outputReport(KEYBOARD_ID);
-  bleKeyboardInstance->inputMediaKeys = bleKeyboardInstance->hid->inputReport(MEDIA_KEYS_ID);
-  bleKeyboardInstance->connectionStatus->inputKeyboard = bleKeyboardInstance->inputKeyboard;
-  bleKeyboardInstance->connectionStatus->outputKeyboard = bleKeyboardInstance->outputKeyboard;
-	bleKeyboardInstance->connectionStatus->inputMediaKeys = bleKeyboardInstance->inputMediaKeys;
-
-  bleKeyboardInstance->outputKeyboard->setCallbacks(new KeyboardOutputCallbacks());
-
-  bleKeyboardInstance->hid->manufacturer()->setValue(bleKeyboardInstance->deviceManufacturer);
-
-  bleKeyboardInstance->hid->pnp(0x02, 0xe502, 0xa111, 0x0210);
-  bleKeyboardInstance->hid->hidInfo(0x00,0x01);
-
-  NimBLESecurity *pSecurity = new BLESecurity();
-
-  pSecurity->setAuthenticationMode(ESP_LE_AUTH_BOND);
-
-  bleKeyboardInstance->hid->reportMap((uint8_t*)_hidReportDescriptor, sizeof(_hidReportDescriptor));
-  bleKeyboardInstance->hid->startServices();
-
-  bleKeyboardInstance->onStarted(pServer);
-
-  NimBLEAdvertising *pAdvertising = pServer->getAdvertising();
-  pAdvertising->setAppearance(HID_KEYBOARD);
-  pAdvertising->addServiceUUID(bleKeyboardInstance->hid->hidService()->getUUID());
-  pAdvertising->start();
-  bleKeyboardInstance->hid->setBatteryLevel(bleKeyboardInstance->batteryLevel);
-
-  ESP_LOGD(LOG_TAG, "Advertising started!");
-  vTaskDelay(portMAX_DELAY); //delay(portMAX_DELAY);
 }
 
 void BleKeyboard::sendReport(KeyReport* keys)
@@ -171,6 +147,29 @@ void BleKeyboard::sendReport(MediaKeyReport* keys)
     this->inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
     this->inputMediaKeys->notify();
   }
+}
+
+void BleKeyboard::onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) {
+    connected = true;
+    if (connectCallback) connectCallback();
+}
+
+void BleKeyboard::onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) {
+    connected = false;
+    if (disconnectCallback) disconnectCallback();
+}
+
+void BleKeyboard::onConnect(Callback cb) {
+    connectCallback = cb;
+}
+
+void BleKeyboard::onDisconnect(Callback cb) {
+    disconnectCallback = cb;
+}
+
+void BleKeyboard::onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) {
+  uint8_t* value = (uint8_t*)(pCharacteristic->getValue().c_str());
+  ESP_LOGI(LOG_TAG, "special keys: %d", *value);
 }
 
 extern

@@ -6,10 +6,10 @@
 #include "nimconfig.h"
 #if defined(CONFIG_BT_NIMBLE_ROLE_PERIPHERAL)
 
-#include "BleConnectionStatus.h"
-#include "NimBLEHIDDevice.h"
-#include "NimBLECharacteristic.h"
-#include "Print.h"
+#include <NimBLEServer.h>
+#include <NimBLECharacteristic.h>
+#include <NimBLEHIDDevice.h>
+#include <Print.h>
 
 
 const uint8_t KEY_LEFT_CTRL = 0x80;
@@ -89,17 +89,11 @@ typedef struct
   uint8_t keys[6];
 } KeyReport;
 
-class BleKeyboard : public Print
+class BleKeyboard : public Print, NimBLEServerCallbacks, NimBLECharacteristicCallbacks
 {
-private:
-  BleConnectionStatus* connectionStatus;
-  NimBLEHIDDevice* hid;
-  NimBLECharacteristic* inputKeyboard;
-  NimBLECharacteristic* outputKeyboard;
-  NimBLECharacteristic* inputMediaKeys;
-  KeyReport _keyReport;
-  MediaKeyReport _mediaKeyReport;
-  static void taskServer(void* pvParameter);
+public:
+  using Callback = std::function<void(void)>;
+
 public:
   BleKeyboard(std::string deviceName = "ESP32-Keyboard", std::string deviceManufacturer = "Espressif", uint8_t batteryLevel = 100);
   void begin(void);
@@ -114,13 +108,31 @@ public:
   size_t write(const MediaKeyReport c);
   size_t write(const uint8_t *buffer, size_t size);
   void releaseAll(void);
-  bool isConnected(void);
+  bool isConnected(void) const;
   void setBatteryLevel(uint8_t level);
+  void onConnect(Callback cb);
+  void onDisconnect(Callback cb);
+
+protected:
+  void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override;
+  void onDisconnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo, int reason) override;
+  virtual void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override;
+
+protected:
+  NimBLEHIDDevice*      hid;
+  NimBLECharacteristic* inputKeyboard;
+  NimBLECharacteristic* outputKeyboard;
+  NimBLECharacteristic* inputMediaKeys;
+  KeyReport _keyReport;
+  MediaKeyReport _mediaKeyReport;
+
   uint8_t batteryLevel;
   std::string deviceManufacturer;
   std::string deviceName;
-protected:
-  virtual void onStarted(NimBLEServer *pServer) { };
+  bool connected = false;
+
+  Callback connectCallback    = nullptr;
+  Callback disconnectCallback = nullptr;
 };
 
 #endif // CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
