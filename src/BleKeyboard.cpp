@@ -211,40 +211,40 @@ const uint8_t _asciimap[128] =
 	0x00,             // RS
 	0x00,             // US
 
-	0x2c,		   //  ' '
-	0x1e|SHIFT,	   // !
-	0x34|SHIFT,	   // "
-	0x20|SHIFT,    // #
-	0x21|SHIFT,    // $
+	0x2c,		   // ' '
+	0x27|SHIFT,	   // !
+	0x20|SHIFT,	   // "
+	0x20,          // #
+	0x30|SHIFT,    // $
 	0x22|SHIFT,    // %
-	0x24|SHIFT,    // &
-	0x34,          // '
-	0x26|SHIFT,    // (
-	0x27|SHIFT,    // )
-	0x25|SHIFT,    // *
+	0x1e,          // &
+	0x21,          // '
+	0x22,          // (
+	0x2d|SHIFT,    // )
+	0x31,          // *
 	0x2e|SHIFT,    // +
-	0x36,          // ,
-	0x2d,          // -
-	0x37,          // .
-	0x38,          // /
-	0x27,          // 0
-	0x1e,          // 1
-	0x1f,          // 2
-	0x20,          // 3
-	0x21,          // 4
-	0x22,          // 5
-	0x23,          // 6
-	0x24,          // 7
-	0x25,          // 8
-	0x26,          // 9
-	0x33|SHIFT,      // :
+	0x10,          // ,
+	0x23,          // -
+	0x33|SHIFT,    // .
+	0x34|SHIFT,    // /
+	0x27|SHIFT,    // 0
+	0x1e|SHIFT,    // 1
+	0x1f|SHIFT,    // 2
+	0x20|SHIFT,    // 3
+	0x21|SHIFT,    // 4
+	0x22|SHIFT,    // 5
+	0x23|SHIFT,    // 6
+	0x24|SHIFT,    // 7
+	0x25|SHIFT,    // 8
+	0x26|SHIFT,    // 9
+	0x34,          // :
 	0x33,          // ;
-	0x36|SHIFT,      // <
+	0x32,          // <
 	0x2e,          // =
-	0x37|SHIFT,      // >
-	0x38|SHIFT,      // ?
-	0x1f|SHIFT,      // @
-	0x04|SHIFT,      // A
+	0x32|SHIFT,    // >
+	0x10|SHIFT,    // ?
+	0x00,	       // @
+	0x14|SHIFT,      // A
 	0x05|SHIFT,      // B
 	0x06|SHIFT,      // C
 	0x07|SHIFT,      // D
@@ -256,27 +256,27 @@ const uint8_t _asciimap[128] =
 	0x0d|SHIFT,      // J
 	0x0e|SHIFT,      // K
 	0x0f|SHIFT,      // L
-	0x10|SHIFT,      // M
+	0x33|SHIFT,      // M
 	0x11|SHIFT,      // N
 	0x12|SHIFT,      // O
 	0x13|SHIFT,      // P
-	0x14|SHIFT,      // Q
+	0x04|SHIFT,      // Q
 	0x15|SHIFT,      // R
 	0x16|SHIFT,      // S
 	0x17|SHIFT,      // T
 	0x18|SHIFT,      // U
 	0x19|SHIFT,      // V
-	0x1a|SHIFT,      // W
+	0x1d|SHIFT,      // W
 	0x1b|SHIFT,      // X
 	0x1c|SHIFT,      // Y
-	0x1d|SHIFT,      // Z
-	0x2f,          // [
-	0x31,          // bslash
-	0x30,          // ]
-	0x23|SHIFT,    // ^
-	0x2d|SHIFT,    // _
-	0x35,          // `
-	0x04,          // a
+	0x1a|SHIFT,      // Z
+	0x22,          // [
+	0x2d,          // bslash
+	0x2d|SHIFT,    // ]
+	0x30,          // ^
+	0x25,          // _
+	0x24,          // `
+	0x14,          // a
 	0x05,          // b
 	0x06,          // c
 	0x07,          // d
@@ -288,25 +288,25 @@ const uint8_t _asciimap[128] =
 	0x0d,          // j
 	0x0e,          // k
 	0x0f,          // l
-	0x10,          // m
+	0x33,          // m
 	0x11,          // n
 	0x12,          // o
 	0x13,          // p
-	0x14,          // q
+	0x04,          // q
 	0x15,          // r
 	0x16,          // s
 	0x17,          // t
 	0x18,          // u
 	0x19,          // v
-	0x1a,          // w
+	0x1d,          // w
 	0x1b,          // x
 	0x1c,          // y
-	0x1d,          // z
-	0x2f|SHIFT,    // {
-	0x31|SHIFT,    // |
-	0x30|SHIFT,    // }
-	0x35|SHIFT,    // ~
-	0				// DEL
+	0x1a,          // z
+	0x22|SHIFT,    // {
+	0x2d,          // |
+	0x2d|SHIFT,    // }
+	0x00,          // ~
+	0x00		   // DEL
 };
 
 
@@ -446,6 +446,10 @@ size_t BleKeyboard::write(const MediaKeyReport c)
 	return p;              // just return the result of press() since release() almost always returns 1
 }
 
+void BleKeyboard::setDelay(uint32_t ms) {
+  this->_delay = ms;
+}
+
 size_t BleKeyboard::write(const uint8_t *buffer, size_t size) {
 	size_t n = 0;
 	while (size--) {
@@ -457,6 +461,7 @@ size_t BleKeyboard::write(const uint8_t *buffer, size_t size) {
 			}
 		}
 		buffer++;
+		delay(_delay);
 	}
 	return n;
 }
