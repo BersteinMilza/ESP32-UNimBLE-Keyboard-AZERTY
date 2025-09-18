@@ -106,12 +106,14 @@ public:
   size_t release(const MediaKeyReport k);
   size_t write(uint8_t c);
   size_t write(const MediaKeyReport c);
+  void setDelay(uint32_t ms);
   size_t write(const uint8_t *buffer, size_t size);
   void releaseAll(void);
   bool isConnected(void) const;
   void setBatteryLevel(uint8_t level);
   void onConnect(Callback cb);
   void onDisconnect(Callback cb);
+  
 
 protected:
   void onConnect(NimBLEServer* pServer, NimBLEConnInfo& connInfo) override;
@@ -133,6 +135,10 @@ protected:
 
   Callback connectCallback    = nullptr;
   Callback disconnectCallback = nullptr;
+  
+private:
+  uint32_t _delay = 50;
+  
 };
 
 #endif // CONFIG_BT_NIMBLE_ROLE_PERIPHERAL
