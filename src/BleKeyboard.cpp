@@ -306,10 +306,8 @@ static const KeymapEntry keymap[] = {
 	{U'ž', {0, KEY_Z, 0, 0}},
 	{U'š', {0, KEY_S, 0, 0}},
 	{U'™', {LSHIFT, KEY_T, LSHIFT, KEY_M}},
-	{U'00A0', {0, KEY_SPACE, 0, 0}}, // NBSP U+00A0 160
+	{0x00A0, {0, KEY_SPACE, 0, 0}}, // NBSP U+00A0 160
 };
-
-// ÁÅÇÉÍÐÑÓØÚÞßáíðñóøýÿþ  Ý å÷ ³ª¦¥¢¡Ÿžš™
 static const size_t keymapSize = sizeof(keymap) / sizeof(KeymapEntry);
 
 
