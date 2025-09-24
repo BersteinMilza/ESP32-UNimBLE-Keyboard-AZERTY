@@ -1,6 +1,6 @@
 {
-  "name": "ESP32 BLE Keyboard",
-  "version": "0.4.0",
+  "name": "ESP32 BLE FR AZERTY Keyboard",
+  "version": "0.1.0",
   "description": "Bluetooth LE Keyboard library for the ESP32.",
   "keywords": "Bluetooth, BLE, HID, Keyboard",
   "platforms": "espressif32",
