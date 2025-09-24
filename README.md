@@ -1,8 +1,10 @@
 # ESP32 NimBLE Keyboard library
 
-Changed the original [ESP32-BLE-Keyboard](https://github.com/T-vK/ESP32-BLE-Keyboard) to support NimBLE.
+Changed the forked [ESP32-BLE-Keyboard](https://github.com/wakwak-koba/ESP32-NimBLE-Keyboard) to support french AZERTY.
+The plan was to just changed the mapping, but due to limits in ASCII for French characters and target usage, it snowballed into UNICODE support.
 
-This library allows you to make the ESP32 act as a Bluetooth Keyboard and control what it does.  
-You might also be interested in:
-- [ESP32-NimBLE-Mouse](https://github.com/wakwak-koba/ESP32-NimBLE-Mouse)
-- [ESP32-NimBLE-Gamepad](https://github.com/lemmingDev/ESP32-BLE-Gamepad)
+Now, BleKeyboard.print handles more complexe characters, and for unsupported characters, a substitution can be made. However, it is slower than the original library.
+
+I deleted media keys support as it is irrelevant for my use case but relevant sections can be added as is.
+
+Current mapping can be edited for any layout, without common ascii characters limits.
