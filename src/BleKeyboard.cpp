@@ -72,12 +72,6 @@
 
 #define KEY_COMPARE 0x64
 
-// typedef struct {
-    // uint8_t modifiers;
-    // uint8_t key1;
-    // uint8_t key2;
-// } KeyPressSequence;
-
 typedef struct {
     uint8_t modifiers1;
     uint8_t key1;
@@ -89,17 +83,6 @@ typedef struct {
     uint32_t unicode;
     KeyPressSequence sequence;
 } KeymapEntry;
-
-// Modifier bitmasks
-// #define NOMOD 0x00 // No modifier 
-// #define LCTRL 0x01 // Left Control
-// #define SHIFT 0x02 // Left Shift - USED
-// #define ALT 0x04 // Left Alt
-// #define LGUI 0x08 // Left GUI
-// #define RCTRL 0x10 // Riht crtl
-// #define RSHIFT 0x20 // Right Shift
-// #define ALTGR 0x40 // Right Alt - USED
-// #define RGUI 0x80 // Right Gui
 
 #define LSHIFT (1 << (uint8_t)ModifierKey::LeftShift)
 #define ALT_GR  (1 << (uint8_t)ModifierKey::RightAlt)
@@ -391,8 +374,8 @@ void BleKeyboard::begin(void)
   outputKeyboard->setCallbacks(this);
   
   hid->setManufacturer(deviceManufacturer);
-  hid->setPnp(0x02, 0x046d, 0xb369, 0x0110);
-  hid->setHidInfo(0x08, 0x01); // hid->setHidInfo(0x00, 0x01);
+  hid->setPnp(0x02, 0xe502, 0xa111, 0x0210);
+  hid->setHidInfo(0x08, 0x01); // hid->setHidInfo(0x00, 0x01); 0x08 for FR, not sure it has any impact
   hid->setReportMap((uint8_t*)_hidReportDescriptor, sizeof(_hidReportDescriptor));
   hid->startServices();
 
