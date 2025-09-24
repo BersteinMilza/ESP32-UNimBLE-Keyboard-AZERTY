@@ -1,40 +1,62 @@
-#include <BleKeyboard.h>
+#include <Arduino.h>
+#include "BleKeyboard.h"
 
-BleKeyboard bleKeyboard;
+// Create an instance of the BleKeyboard class
+BleKeyboard bleKeyboard("ESP32 Keyboard", "ESP", 80);
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting BLE work!");
-  bleKeyboard.onConnect([](){ Serial.println("onConnect"); });
-  bleKeyboard.onDisconnect([](){ Serial.println("onDisconnect"); });
+  Serial.println("Starting BLE Keyboard Shortcuts Example");
+
+  // Start the BLE keyboard server
   bleKeyboard.begin();
-  bleKeyboard.setDelay(80);
+  
+  Serial.println("Waiting for a client connection...");
 }
 
 void loop() {
-  if(bleKeyboard.isConnected()) {
-    Serial.println("Sending 'Hello world'...");
-    bleKeyboard.print("Hello world");
+  if (bleKeyboard.isConnected()) {
+    Serial.println("Performing Copy/Paste action in 5 seconds...");
+    delay(5000);
 
-    delay(1000);
+    // Type the initial text
+    bleKeyboard.print("This is a test sentence.");
+    delay(500);
 
-    Serial.println("Sending Enter key...");
-    bleKeyboard.write(KEY_RETURN);
+    // 1. Select all (Ctrl+A)
+    Serial.println("Sending Ctrl+A (Select All)");
+    bleKeyboard.press(ModifierKey::LeftCtrl);
+    bleKeyboard.press('a');
+    delay(100);
+    bleKeyboard.releaseAll();
+    delay(500);
 
-    delay(1000);
+    // 2. Copy (Ctrl+C)
+    Serial.println("Sending Ctrl+C (Copy)");
+    bleKeyboard.press(ModifierKey::LeftCtrl);
+    bleKeyboard.press('c');
+    delay(100);
+    bleKeyboard.releaseAll();
+    delay(500);
+    
+    // 3. Move to the end of the line and press Enter
+    Serial.println("Sending Right Arrow and Enter");
+    bleKeyboard.tap(SpecialKey::RightArrow);
+    bleKeyboard.tap(SpecialKey::Return);
+    delay(500);
 
-    // Serial.println("Sending Play/Pause media key...");
-    // bleKeyboard.write(KEY_MEDIA_PLAY_PAUSE);
+    // 4. Paste (Ctrl+V)
+    Serial.println("Sending Ctrl+V (Paste)");
+    bleKeyboard.press(ModifierKey::LeftCtrl);
+    bleKeyboard.press('v');
+    delay(100);
+    bleKeyboard.releaseAll();
+    delay(500);
 
-    // delay(1000);
-
-    // Serial.println("Sending Ctrl+Alt+Delete...");
-    // bleKeyboard.press(KEY_LEFT_CTRL);
-    // bleKeyboard.press(KEY_LEFT_ALT);
-    // bleKeyboard.press(KEY_DELETE);
-    // delay(100);
-    // bleKeyboard.releaseAll();
+    // Add a long delay before repeating the action
+    delay(10000);
   }
+}
 
   Serial.println("Waiting 5 seconds...");
   delay(5000);
